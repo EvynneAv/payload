@@ -1,14 +1,14 @@
-import type { FieldValues, UseFormRegister } from 'react-hook-form'
+import type { FieldError, FieldValues, UseFormRegister } from 'react-hook-form'
 
 import React from 'react'
 
 import classes from './index.module.scss'
 
-type Props = {
-  error: any
+type Props<TFieldValues extends FieldValues = FieldValues> = {
+  error?: FieldError;
   label: string
   name: string
-  register: UseFormRegister<any & FieldValues> // eslint-disable-line @typescript-eslint/no-redundant-type-constituents
+  register: UseFormRegister<TFieldValues> // eslint-disable-line @typescript-eslint/no-redundant-type-constituents
   required?: boolean
   type?: 'email' | 'number' | 'password' | 'text'
   validate?: (value: string) => boolean | string
