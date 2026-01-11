@@ -1,9 +1,13 @@
 import React from 'react'
-
 import classes from './index.module.scss'
 import serialize from './serialize'
 
-const RichText: React.FC<{ className?: string; content: any }> = ({ className, content }) => {
+type Props = {
+  className?: string
+  content: Parameters<typeof serialize>[0]
+}
+
+const RichText: React.FC<Props> = ({ className, content }) => {
   if (!content) {
     return null
   }

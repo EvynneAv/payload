@@ -106,23 +106,28 @@ export const Form: React.FC<FormProps> = (props) => {
 
   const [disabled, setDisabled] = useState(disabledFromProps || false)
   const [isMounted, setIsMounted] = useState(false)
+type FormStatus = 'initializing' | 'idle' | 'processing' | 'backgroundProcessing' | 'submitted'
 
-  const [submitted, setSubmitted] = useState(false)
+const [status, setStatus] = useState<FormStatus>(
+  initializingFromProps ? 'initializing' : 'idle',
+)
+
+  // const [submitted, setSubmitted] = useState(false)------------
 
   /**
    * Tracks wether the form state passes validation.
    * For example the state could be submitted but invalid as field errors have been returned.
    */
   const [isValid, setIsValid] = useState(true)
-  const [initializing, setInitializing] = useState(initializingFromProps)
+  // const [initializing, setInitializing] = useState(initializingFromProps)------------
 
-  const [processing, setProcessing] = useState(false)
+  // const [processing, setProcessing] = useState(false)----------
 
   /**
    * Determines whether the form is processing asynchronously in the background, e.g. autosave is running.
    * Useful to determine whether to disable the form or queue other processes while in flight, e.g. disable manual submits while an autosave is running.
    */
-  const [backgroundProcessing, _setBackgroundProcessing] = useState(false)
+  // const [backgroundProcessing, _setBackgroundProcessing] = useState(false) ----------------
 
   /**
    * A ref that can be read within the `setModified` interceptor.

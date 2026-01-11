@@ -134,10 +134,14 @@ export const seoPlugin =
         ...(config.endpoints ?? []),
         {
           handler: async (req) => {
-            const data: Omit<
-              Parameters<GenerateTitle>[0],
-              'collectionConfig' | 'globalConfig' | 'req'
-            > = await req.json?.()
+            const generateTitleInjectedKeys = ['collectionConfig', 'globalConfig', 'req'] as const
+type GenerateTitleInjectedKey = (typeof generateTitleInjectedKeys)[number]
+
+
+            const data: Omit<Parameters<GenerateTitle>[0], GenerateTitleInjectedKey> =
+  await req.json?.()
+
+
 
             const reqData = data ?? req.data
 
@@ -158,10 +162,12 @@ export const seoPlugin =
         },
         {
           handler: async (req) => {
-            const data: Omit<
-              Parameters<GenerateTitle>[0],
-              'collectionConfig' | 'globalConfig' | 'req'
-            > = await req.json?.()
+            const generateTitleInjectedKeys = ['collectionConfig', 'globalConfig', 'req'] as const
+            type GenerateTitleInjectedKey = (typeof generateTitleInjectedKeys)[number]
+
+            const data: Omit<Parameters<GenerateTitle>[0], GenerateTitleInjectedKey> =
+  await req.json?.()
+
 
             const reqData = data ?? req.data
 
