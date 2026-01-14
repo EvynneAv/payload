@@ -100,6 +100,8 @@ type FormsManagerProps = {
   readonly children: React.ReactNode
 }
 
+type InitializationStatus = 'idle' | 'initializing' | 'ready'
+
 export function FormsManagerProvider({ children }: FormsManagerProps) {
   const { config } = useConfig()
   const {
@@ -110,15 +112,11 @@ export function FormsManagerProvider({ children }: FormsManagerProps) {
 
   const { getDocumentSlots, getFormState } = useServerFunctions()
   const { getUploadHandler } = useUploadHandlers()
-
   const [documentSlots, setDocumentSlots] = React.useState<DocumentSlots>({})
   const [hasSubmitted, setHasSubmitted] = React.useState(false)
   const [docPermissions, setDocPermissions] = React.useState<SanitizedDocumentPermissions>()
-  const [hasSavePermission, setHasSavePermission] = React.useState(false)
-  const [hasPublishPermission, setHasPublishPermission] = React.useState(false)
-  const [hasInitializedState, setHasInitializedState] = React.useState(false)
-  const [hasInitializedDocPermissions, setHasInitializedDocPermissions] = React.useState(false)
-  const [isInitializing, setIsInitializing] = React.useState(false)
+  const [initializationStatus, setInitializationStatus] = React.useState<InitializationStatus>('idle')
+  const isInitializing = initializationStatus === 'initializing'
   const [state, dispatch] = React.useReducer(formsManagementReducer, initialState)
   const { activeIndex, forms, totalErrorCount } = state
 
@@ -153,6 +151,8 @@ export function FormsManagerProvider({ children }: FormsManagerProps) {
   const actionURL = `${baseAPIPath}/${collectionSlug}`
 
   const initializeSharedDocPermissions = React.useCallback(async () => {
+    setInitializationStatus('initializing')
+
     const params = {
       locale: code || undefined,
     }
@@ -168,6 +168,7 @@ export function FormsManagerProvider({ children }: FormsManagerProps) {
     })
 
     const json: SanitizedDocumentPermissions = await res.json()
+
     const publishedAccessJSON = await fetch(
       `${baseAPIPath}${docAccessURL}?${qs.stringify(params)}`,
       {
@@ -194,11 +195,14 @@ export function FormsManagerProvider({ children }: FormsManagerProps) {
     )
 
     setHasPublishPermission(publishedAccessJSON?.update)
-    setHasInitializedDocPermissions(true)
+
+    setInitializationStatus((prev) => prev === 'initializing' ? 'ready' : prev, )
   }, [baseAPIPath, code, collectionSlug, i18n.language])
 
   const initializeSharedFormState = React.useCallback(
     async (abortController?: AbortController) => {
+      setInitializationStatus('initializing')
+
       if (abortController?.signal) {
         abortController.abort('aborting previous fetch for initial form state without files')
       }
@@ -219,7 +223,7 @@ export function FormsManagerProvider({ children }: FormsManagerProps) {
           skipValidation: true,
         })
         initialStateRef.current = formStateWithoutFiles
-        setHasInitializedState(true)
+        setHasInitializedState((prev) => prev === 'initializing' ? 'ready' : prev, )
       } catch (_err) {
         // swallow error
       }
@@ -581,14 +585,6 @@ export function FormsManagerProvider({ children }: FormsManagerProps) {
 
     if (!hasInitializedDocPermissions) {
       void initializeSharedDocPermissions()
-    }
-
-    if (initialFiles || initialForms) {
-      if (!hasInitializedState || !hasInitializedDocPermissions) {
-        setIsInitializing(true)
-      } else {
-        setIsInitializing(false)
-      }
     }
 
     if (
