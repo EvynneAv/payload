@@ -1,5 +1,12 @@
 import type { CheckboxField } from '@payloadcms/plugin-form-builder/types'
-import type { FieldErrorsImpl, FieldValues, UseFormRegister } from 'react-hook-form'
+import type {
+  FieldErrorsImpl,
+  FieldValues,
+  UseFormRegister,
+  UseFormGetValues,
+  UseFormSetValue,
+  Path,
+} from 'react-hook-form'
 
 import React, { useState } from 'react'
 
@@ -8,18 +15,18 @@ import { Error } from '../Error'
 import { Width } from '../Width'
 import classes from './index.module.scss'
 
-export const Checkbox: React.FC<
-  {
-    errors: Partial<
-      FieldErrorsImpl<{
-        [x: string]: any
-      }>
-    >
-    getValues: any
-    register: UseFormRegister<any & FieldValues>
-    setValue: any
-  } & CheckboxField
-> = ({
+interface CheckboxProps extends CheckboxField {
+  errors: Partial<FieldErrorsImpl<FormData>>
+  getValues: UseFormGetValues<FormData>
+  register: UseFormRegister<FormData>
+  setValue: UseFormSetValue<FormData>
+}
+
+type FormData = {
+  [key: string]: boolean | string | number | null
+}
+
+export const Checkbox: React.FC<CheckboxProps> = ({
   name,
   errors,
   getValues,
@@ -29,9 +36,9 @@ export const Checkbox: React.FC<
   setValue,
   width,
 }) => {
-  const [checked, setChecked] = useState(false)
+  const [checked, setChecked] = useState<boolean>(false)
 
-  const isCheckboxChecked = getValues(name)
+  const isCheckboxChecked: boolean = (getValues(name as Path<FormData>) as boolean) ?? false
 
   return (
     <Width width={width}>
@@ -39,23 +46,37 @@ export const Checkbox: React.FC<
         <div className={classes.container}>
           <input
             type="checkbox"
-            {...register(name, { required: requiredFromProps })}
+            {...register(name as Path<FieldValues>, {
+              required: requiredFromProps
+            })}
             checked={isCheckboxChecked}
+            onChange={(e) => {
+              setValue(name as Path<FieldValues>, e.target.checked, {
+                shouldValidate: true
+              })
+            }}
           />
           <button
             onClick={() => {
-              setValue(name, !checked)
+              setValue(name as Path<FieldValues>, !checked, {
+                shouldValidate: true
+              })
               setChecked(!checked)
             }}
             type="button"
+            aria-label={label}
           >
             <span className={classes.input}>
               <Check />
             </span>
           </button>
-          <span className={classes.label}>{label}</span>
+          <label htmlFor={name} className={classes.label}>
+            {label}
+          </label>
         </div>
-        {requiredFromProps && errors[name] && checked === false && <Error />}
+        {requiredFromProps && errors[name] && checked === false && (
+          <Error />
+        )}
       </div>
     </Width>
   )

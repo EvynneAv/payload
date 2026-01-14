@@ -1,18 +1,48 @@
 'use client'
-import type { Validate, ValidateOptions } from 'payload'
+import type { Validate, ValidateOptions, Field, Operation } from 'payload'
 
 import { EmailField, TextField, useTranslation } from '@payloadcms/ui'
 import { email, username } from 'payload/shared'
 import React from 'react'
 
+type LoginData = {
+  username?: string
+  email?: string
+  password?: string
+  [key: string]: unknown
+}
+
+type LoginFieldData = {
+  username?: string
+  email?: string
+}
+
+type LoginFieldType = Field & {
+  name: 'username' | 'email'
+}
+
 export type LoginFieldProps = {
   readonly required?: boolean
   readonly type: 'email' | 'emailOrUsername' | 'username'
-  readonly validate?: Validate
+  readonly validate?: Validate<LoginData, LoginFieldData, LoginFieldType>
 }
 
 export const LoginField: React.FC<LoginFieldProps> = ({ type, required = true }) => {
   const { t } = useTranslation()
+
+  const validateEmail = (
+    value: string | undefined,
+    options: ValidateOptions<LoginData, LoginFieldData, LoginFieldType, Operation>
+  ): string | true => {
+    return email(value, options)
+  }
+
+  const validateUsername = (
+    value: string | undefined,
+    options: ValidateOptions<LoginData, LoginFieldData, LoginFieldType, Operation>
+  ): string | true => {
+    return username(value, options)
+  }
 
   if (type === 'email') {
     return (
@@ -26,7 +56,7 @@ export const LoginField: React.FC<LoginFieldProps> = ({ type, required = true })
           required,
         }}
         path="email"
-        validate={email}
+        validate={(value, options) => validateEmail(value, options)}
       />
     )
   }
@@ -40,7 +70,7 @@ export const LoginField: React.FC<LoginFieldProps> = ({ type, required = true })
           required,
         }}
         path="username"
-        validate={username}
+        validate={(value, options) => validateUsername(value, options)}
       />
     )
   }
@@ -55,14 +85,14 @@ export const LoginField: React.FC<LoginFieldProps> = ({ type, required = true })
         }}
         path="username"
         validate={(value, options) => {
-          const passesUsername = username(value, options)
-          const passesEmail = email(
-            value,
-            options as ValidateOptions<any, { username?: string }, any, any>,
-          )
+          const passesUsername = validateUsername(value, options)
+          const passesEmail = validateEmail(value, options)
 
           if (!passesEmail && !passesUsername) {
-            return `${t('general:email')}: ${passesEmail} ${t('general:username')}: ${passesUsername}`
+              return t('validation:invalidEmailOrUsername', {
+              emailError: passesEmail,
+              usernameError: passesUsername
+            })
           }
 
           return true
