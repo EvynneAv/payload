@@ -15,3 +15,21 @@ export const normalizeQueryParam = (v: unknown): string | undefined => {
   }
   return undefined
 }
+
+export type SortDirection = 'asc' | 'desc'
+
+export function isValidSortDirection(value: unknown): value is SortDirection {
+  return value === 'asc' || value === 'desc'
+}
+
+export function toSortDirection(value: unknown, fallback: SortDirection = 'asc'): SortDirection {
+  return isValidSortDirection(value) ? value : fallback
+}
+
+export function toggleSortDirection(current: SortDirection): SortDirection {
+  return current === 'asc' ? 'desc' : 'asc'
+}
+
+export function toggleSortDirection(current: SortDirection): SortDirection {
+  return current === 'asc' ? 'desc' : 'asc'
+}

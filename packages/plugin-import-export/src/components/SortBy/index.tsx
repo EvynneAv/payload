@@ -13,7 +13,14 @@ import {
 } from '@payloadcms/ui'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
-import { applySortOrder, normalizeQueryParam, stripSortDash } from '../../utilities/sortHelpers.js'
+import {
+  applySortOrder,
+  normalizeQueryParam,
+  stripSortDash,
+  SortDirection,
+  toSortDirection,
+  isDescendingSort
+} from '../../utilities/sortHelpers.js'
 import { reduceFields } from '../FieldsToExport/reduceFields.js'
 import { useImportExport } from '../ImportExportProvider/index.js'
 import './index.scss'
@@ -27,9 +34,12 @@ export const SortBy: SelectFieldClientComponent = (props) => {
   const { setValue: setSort, value: sortRaw } = useField<string>()
 
   // Sibling order field ('asc' | 'desc') used when writing sort on change
-  const { value: sortOrder = 'asc' } = useField<string>({ path: 'sortOrder' })
+  const { value: sortOrderRaw } = useField<SortDirection>({ path: 'sortOrder' })
+
+  const sortOrder: SortDirection = toSortDirection(sortOrderRaw, 'asc')
+
   // Needed so we can initialize sortOrder when SortOrder component is hidden
-  const { setValue: setSortOrder } = useField<'asc' | 'desc'>({ path: 'sortOrder' })
+  const { setValue: setSortOrder } = useField<SortDirection>({ path: 'sortOrder' })
 
   const { value: collectionSlug } = useField<string>({ path: 'collectionSlug' })
   const { query } = useListQuery()
@@ -91,9 +101,9 @@ export const SortBy: SelectFieldClientComponent = (props) => {
       return
     }
 
-    const isDesc = !!qsSort && qsSort.startsWith('-')
+    const isDesc = isDescendingSort(qsSort)
     const base = stripSortDash(source)
-    const order: 'asc' | 'desc' = isDesc ? 'desc' : 'asc'
+    const order: SortDirection = isDesc ? 'desc' : 'asc'
 
     // Write BOTH fields so preview/export have the right values even if SortOrder is hidden
     setSort(applySortOrder(base, order))
@@ -114,7 +124,8 @@ export const SortBy: SelectFieldClientComponent = (props) => {
       setDisplayedValue(null)
     } else {
       setDisplayedValue(option)
-      const next = applySortOrder(option.value, String(sortOrder) as 'asc' | 'desc')
+      const direction = toSortDirection(sortOrder, 'asc')
+      const next = applySortOrder(option.value, direction)
       setSort(next)
     }
   }

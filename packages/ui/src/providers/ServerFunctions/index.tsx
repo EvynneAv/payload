@@ -31,32 +31,34 @@ import type {
   SchedulePublishHandlerArgs,
 } from '../../utilities/schedulePublishHandler.js'
 
-type GetFormStateClient = (
-  args: {
-    signal?: AbortSignal
-  } & Omit<BuildFormStateArgs, 'clientConfig' | 'req'>,
-) => ReturnType<typeof buildFormStateHandler>
+type ClientExposedArgs<T> = Omit<T, 'clientConfig' | 'req'>
 
-type SchedulePublishClient = (
-  args: {
-    signal?: AbortSignal
-  } & Omit<SchedulePublishHandlerArgs, 'clientConfig' | 'req'>,
-) => ReturnType<typeof schedulePublishHandler>
+type ServerFunctionClientWithSignal<Args, Result> = (
+  args: { signal?: AbortSignal } & ClientExposedArgs<Args>
+) => Result
 
-type GetTableStateClient = (
-  args: {
-    signal?: AbortSignal
-  } & Omit<BuildTableStateArgs, 'clientConfig' | 'req'>,
-) => ReturnType<typeof buildTableStateHandler>
+type GetFormStateClient = ServerFunctionClientWithSignal<
+  BuildFormStateArgs,
+  ReturnType<typeof buildFormStateHandler>
+>
 
-type SlugifyClient = (
-  args: {
-    signal?: AbortSignal
-  } & Omit<SlugifyServerFunctionArgs, 'clientConfig' | 'req'>,
-) => ReturnType<Slugify>
+type SchedulePublishClient = ServerFunctionClientWithSignal<
+  SchedulePublishHandlerArgs,
+  ReturnType<typeof schedulePublishHandler>
+>
+
+type GetTableStateClient = ServerFunctionClientWithSignal<
+  BuildTableStateArgs,
+  ReturnType<typeof buildTableStateHandler>
+>
+
+type SlugifyClient = ServerFunctionClientWithSignal<
+  SlugifyServerFunctionArgs,
+  ReturnType<Slugify>
+>
 
 export type RenderDocumentResult = {
-  data: any
+  data: unknown
   Document: React.ReactNode
   preferences: DocumentPreferences
 }
